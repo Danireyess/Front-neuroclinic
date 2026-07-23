@@ -3,20 +3,26 @@ import { Brain, ShieldCheck } from "lucide-react";
 import { COLORES } from "../constantes";
 import { Campo } from "../components/Comunes";
 
-export default function Login({ onIngresar }) {
+export default function Login({ onIngresar, onVolverAlInicio }) {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [rolSeleccionado, setRolSeleccionado] = useState("paciente");
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: COLORES.fondo }}>
-      <header className="px-8 py-4 bg-white" style={{ borderBottom: `1px solid ${COLORES.borde}` }}>
+      <header
+        className="px-8 py-4 bg-white flex items-center justify-between"
+        style={{ borderBottom: `1px solid ${COLORES.borde}` }}
+      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: COLORES.lavanda }}>
             <Brain size={16} style={{ color: COLORES.navy }} />
           </div>
           <p className="font-display font-bold text-lg" style={{ color: COLORES.navy }}>NeuroClinic</p>
         </div>
+        <button onClick={onVolverAlInicio} className="text-sm font-bold" style={{ color: COLORES.azul }}>
+          ← Volver al inicio
+        </button>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-6">

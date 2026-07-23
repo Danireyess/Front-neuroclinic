@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { COLORES, DISPONIBILIDAD_DEFAULT, ESTADO_CANCELADA } from "./constantes";
+import Home from "./vistas/Home";
 import Login from "./vistas/Login";
 import SeleccionPerfil from "./vistas/SeleccionPerfil";
 import PortalPaciente from "./vistas/PortalPaciente";
@@ -10,6 +11,7 @@ export default function App() {
   const [pacientes, setPacientes] = useState([]);
   const [citas, setCitas] = useState([]);
   const [sesion, setSesion] = useState(null);
+  const [mostrandoLogin, setMostrandoLogin] = useState(false);
 
   const agregarPaciente = (datosPaciente) => {
     const nuevoPaciente = { ...datosPaciente, id: Date.now() };
@@ -68,8 +70,13 @@ export default function App() {
 
   return (
     <div className="nc-root min-h-screen flex flex-col" style={{ background: COLORES.fondo }}>
-      {sesion === null ? (
-        <Login onIngresar={(rolElegido) => setSesion({ rol: rolElegido, id: null })} />
+      {sesion === null && !mostrandoLogin ? (
+        <Home onIrALogin={() => setMostrandoLogin(true)} />
+      ) : sesion === null ? (
+        <Login
+          onIngresar={(rolElegido) => { setSesion({ rol: rolElegido, id: null }); setMostrandoLogin(false); }}
+          onVolverAlInicio={() => setMostrandoLogin(false)}
+        />
       ) : usuarioActual == null ? (
         <SeleccionPerfil
           rol={sesion.rol}
