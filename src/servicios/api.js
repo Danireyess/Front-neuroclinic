@@ -1,7 +1,6 @@
 const API_URL = import.meta.env?.VITE_API_URL || "";
 
-const RUTA_CITAS_POR_FECHA = "/appointments/by-date";
-const RUTA_CREAR_CITA = "/appointments";
+const RUTA_CITAS = "/api/Appointment";
 
 function Get(url, params = {}, headers = {}) {
   const queryString = new URLSearchParams(params).toString();
@@ -19,14 +18,18 @@ function Post(url, body = {}, headers = {}) {
 
 export async function obtenerCitasPorFecha(fechaIso) {
   if (!API_URL) return [];
-  const respuesta = await Get(`${API_URL}${RUTA_CITAS_POR_FECHA}`, { date: fechaIso });
+  const respuesta = await Get(`${API_URL}${RUTA_CITAS}`, { date: fechaIso });
   if (!respuesta.ok) throw new Error("No se pudieron cargar los horarios");
-  return respuesta.json();
+  const citas = await respuesta.json();
+  if (!Array.isArray(citas)) return [];
+  return citas.filter(
+    (cita) => typeof cita?.start_date === "string" && cita.start_date.startsWith(fechaIso)
+  );
 }
 
 export async function crearCita(datosCita) {
   if (!API_URL) return { ...datosCita, simulada: true };
-  const respuesta = await Post(`${API_URL}${RUTA_CREAR_CITA}`, datosCita);
+  const respuesta = await Post(`${API_URL}${RUTA_CITAS}`, datosCita);
   if (!respuesta.ok) throw new Error("No se pudo agendar la cita");
   return respuesta.json();
 }
