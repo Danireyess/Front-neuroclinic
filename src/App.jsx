@@ -5,6 +5,7 @@ import Login from "./vistas/Login";
 import SeleccionPerfil from "./vistas/SeleccionPerfil";
 import PortalPaciente from "./vistas/PortalPaciente";
 import PortalProfesional from "./vistas/PortalProfesional";
+// import PruebaCitas from "./vistas/PruebaCitas";
 
 export default function App() {
   const [profesionales, setProfesionales] = useState([]);
@@ -72,7 +73,7 @@ export default function App() {
     <div className="nc-root min-h-screen flex flex-col" style={{ background: COLORES.fondo }}>
       {sesion === null && !mostrandoLogin ? (
         <Home onIrALogin={() => setMostrandoLogin(true)} />
-      ) : sesion === null ? (
+      ) : sesion === null ? ( 
         <Login
           onIngresar={(rolElegido) => { setSesion({ rol: rolElegido, id: null }); setMostrandoLogin(false); }}
           onVolverAlInicio={() => setMostrandoLogin(false)}

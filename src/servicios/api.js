@@ -25,6 +25,7 @@ export async function obtenerCitasPorFecha(fechaIso) {
   return citas.filter(
     (cita) => typeof cita?.start_date === "string" && cita.start_date.startsWith(fechaIso)
   );
+  
 }
 
 export async function crearCita(datosCita) {
