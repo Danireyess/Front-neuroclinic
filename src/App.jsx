@@ -12,7 +12,7 @@ import PortalProfesional from "./vistas/PortalProfesional";
 
 export default function App() {
   const navigate = useNavigate(); 
-  const { login, logout } = useAuth(); // Traemos las funciones de nuestra memoria global
+  const { login, logout } = useAuth();
 
   // TUS ESTADOS ORIGINALES
   const [profesionales, setProfesionales] = useState([]);
