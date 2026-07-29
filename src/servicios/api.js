@@ -4,10 +4,9 @@ const API_URL = import.meta.env?.VITE_API_URL || "";
 const RUTA_CITAS = "/api/Appointment";
 
 function obtenerCabeceras(cabecerasExtra = {}) {
-  const token = Cookies.get('token'); // Leemos el token guardado
+  const token = Cookies.get('token');
   const headers = { ...cabecerasExtra };
   
-  // Si existe el token, lo agregamos con el formato "Bearer [token]"
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -21,7 +20,7 @@ function Get(url, params = {}, headers = {}) {
   
   return fetch(urlCompleta, { 
     method: "GET", 
-    headers: obtenerCabeceras(headers) // 3. Usamos la función auxiliar
+    headers: obtenerCabeceras(headers) 
   });
 }
 
