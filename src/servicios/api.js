@@ -1,17 +1,40 @@
-const API_URL = import.meta.env?.VITE_API_URL || "";
+import Cookies from 'js-cookie';
 
+const API_URL = import.meta.env?.VITE_API_URL || "";
 const RUTA_CITAS = "/api/Appointment";
+
+function obtenerCabeceras(cabecerasExtra = {}) {
+  const token = Cookies.get('token'); // Leemos el token guardado
+  const headers = { ...cabecerasExtra };
+  
+  // Si existe el token, lo agregamos con el formato "Bearer [token]"
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
 
 function Get(url, params = {}, headers = {}) {
   const queryString = new URLSearchParams(params).toString();
   const urlCompleta = queryString ? `${url}?${queryString}` : url;
-  return fetch(urlCompleta, { method: "GET", headers });
+  
+  return fetch(urlCompleta, { 
+    method: "GET", 
+    headers: obtenerCabeceras(headers) // 3. Usamos la función auxiliar
+  });
 }
 
 function Post(url, body = {}, headers = {}) {
+  // 4. Combinamos Content-Type con nuestro token
+  const cabecerasCompletas = obtenerCabeceras({ 
+    "Content-Type": "application/json", 
+    ...headers 
+  });
+
   return fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: cabecerasCompletas,
     body: JSON.stringify(body),
   });
 }
@@ -25,7 +48,6 @@ export async function obtenerCitasPorFecha(fechaIso) {
   return citas.filter(
     (cita) => typeof cita?.start_date === "string" && cita.start_date.startsWith(fechaIso)
   );
-  
 }
 
 export async function crearCita(datosCita) {
