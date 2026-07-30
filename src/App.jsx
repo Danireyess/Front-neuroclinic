@@ -12,15 +12,13 @@ import PortalProfesional from "./vistas/PortalProfesional";
 
 export default function App() {
   const navigate = useNavigate(); 
-  const { login, logout } = useAuth(); // Traemos las funciones de nuestra memoria global
+  const { login, logout } = useAuth();
 
-  // TUS ESTADOS ORIGINALES
   const [profesionales, setProfesionales] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [citas, setCitas] = useState([]);
   const [sesion, setSesion] = useState(null); 
 
-  // TUS FUNCIONES ORIGINALES (agregarPaciente, etc...)
   const agregarPaciente = (datosPaciente) => {
     const nuevoPaciente = { ...datosPaciente, id: Date.now() };
     setPacientes((listaAnterior) => [...listaAnterior, nuevoPaciente]);
