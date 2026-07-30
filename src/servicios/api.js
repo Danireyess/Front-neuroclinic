@@ -4,10 +4,9 @@ const API_URL = import.meta.env?.VITE_API_URL || "";
 const RUTA_CITAS = "/api/Appointment";
 
 function obtenerCabeceras(cabecerasExtra = {}) {
-  const token = Cookies.get('token'); // Leemos el token guardado
+  const token = Cookies.get('token'); 
   const headers = { ...cabecerasExtra };
   
-  // Si existe el token, lo agregamos con el formato "Bearer [token]"
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -21,12 +20,11 @@ function Get(url, params = {}, headers = {}) {
   
   return fetch(urlCompleta, { 
     method: "GET", 
-    headers: obtenerCabeceras(headers) // 3. Usamos la función auxiliar
+    headers: obtenerCabeceras(headers) 
   });
 }
 
 function Post(url, body = {}, headers = {}) {
-  // 4. Combinamos Content-Type con nuestro token
   const cabecerasCompletas = obtenerCabeceras({ 
     "Content-Type": "application/json", 
     ...headers 
@@ -54,5 +52,17 @@ export async function crearCita(datosCita) {
   if (!API_URL) return { ...datosCita, simulada: true };
   const respuesta = await Post(`${API_URL}${RUTA_CITAS}`, datosCita);
   if (!respuesta.ok) throw new Error("No se pudo agendar la cita");
+  return respuesta.json();
+}
+
+export async function iniciarSesion(rol, email, password) {
+  const ruta = rol === "paciente"
+    ? "/api/Auth/patientlogin"
+    : "/api/Auth/doctorlogin";
+
+  const respuesta = await Post(`${API_URL}${ruta}`, { email, password });
+
+  if (!respuesta.ok) throw new Error("Correo o contraseña incorrectos");
+
   return respuesta.json();
 }

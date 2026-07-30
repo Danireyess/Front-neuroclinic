@@ -1,5 +1,9 @@
 import { useState } from "react";
-import axios from "axios";
+import { Brain, ShieldCheck } from "lucide-react";
+import Cookies from "js-cookie";
+import { COLORES } from "../constantes";
+import { Campo } from "../components/Comunes";
+import { iniciarSesion } from "../servicios/api";
 
 export default function Login({ onIngresar, onVolverAlInicio }) {
   const [correo, setCorreo] = useState("");
@@ -8,137 +12,126 @@ export default function Login({ onIngresar, onVolverAlInicio }) {
   const [mensajeError, setMensajeError] = useState("");
   const [cargando, setCargando] = useState(false);
 
-  const manejarInicioSesion = async (evento) => {
-    evento.preventDefault();
+  const manejarLogin = async () => {
     setMensajeError("");
-
     if (!correo.trim() || !contrasena.trim()) {
       setMensajeError("Por favor completa todos los campos.");
       return;
     }
-
     setCargando(true);
-
     try {
-      const endpoint =
-        rolSeleccionado === "paciente"
-          ? "/api/Auth/patientlogin"
-          : "/api/Auth/doctorlogin";
-
-      const respuesta = await axios.post(`http://localhost:5175${endpoint}`, {
-        email: correo,
-        password: contrasena,
-      });
-
-      const tokenRecibido = respuesta.data.token || respuesta.data.accessToken;
-
-      onIngresar(rolSeleccionado, tokenRecibido);
-
-    } catch (error) {
-      if (error.response && error.response.data) {
-        setMensajeError(
-          error.response.data.mensaje ||
-            error.response.data.message ||
-            "Correo o contraseña incorrectos."
-        );
-      } else {
-        setMensajeError("No se pudo conectar con el servidor. Revisa que tu backend esté corriendo.");
-      }
+      const datos = await iniciarSesion(rolSeleccionado, correo, contrasena);
+      Cookies.set("token", datos.token, { expires: 1 });
+      onIngresar(rolSeleccionado);
+    } catch (err) {
+      setMensajeError("Correo o contraseña incorrectos");
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        
-        
+    <div className="min-h-screen flex flex-col" style={{ background: COLORES.fondo }}>
+      <header
+        className="px-8 py-4 bg-white flex items-center justify-between"
+        style={{ borderBottom: `1px solid ${COLORES.borde}` }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: COLORES.lavanda }}>
+            <Brain size={16} style={{ color: COLORES.navy }} />
+          </div>
+          <p className="font-display font-bold text-lg" style={{ color: COLORES.navy }}>NeuroClinic</p>
+        </div>
         {onVolverAlInicio && (
-          <button
-            onClick={onVolverAlInicio}
-            className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center gap-1"
-          >
+          <button onClick={onVolverAlInicio} className="text-sm font-bold" style={{ color: COLORES.azul }}>
             ← Volver al inicio
           </button>
         )}
+      </header>
 
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Iniciar Sesión
-        </h2>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-6">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-md">
+          <h1 className="font-display text-2xl font-bold text-center mb-1" style={{ color: COLORES.navy }}>
+            Bienvenido a NeuroClinic
+          </h1>
+          <p className="text-sm text-center mb-7" style={{ color: COLORES.azul }}>
+            Accede a tu portal de salud
+          </p>
 
-        
-        <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
-          <button
-            type="button"
-            onClick={() => setRolSeleccionado("paciente")}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-              rolSeleccionado === "paciente"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Paciente
-          </button>
-          <button
-            type="button"
-            onClick={() => setRolSeleccionado("profesional")}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-              rolSeleccionado === "profesional"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Médico / Profesional
-          </button>
-        </div>
-
-        {/* Mensaje de Error */}
-        {mensajeError && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200 text-center">
-            {mensajeError}
+          <div className="flex rounded-full p-1 mb-6" style={{ background: COLORES.lavanda }}>
+            {[
+              { id: "paciente", label: "Paciente" },
+              { id: "profesional", label: "Profesional" },
+            ].map((opcionRol) => (
+              <button
+                key={opcionRol.id}
+                type="button"
+                onClick={() => setRolSeleccionado(opcionRol.id)}
+                className="flex-1 py-1.5 rounded-full text-xs font-bold transition-colors"
+                style={
+                  rolSeleccionado === opcionRol.id
+                    ? { background: COLORES.navy, color: "#fff" }
+                    : { color: COLORES.navySuave }
+                }
+              >
+                {opcionRol.label}
+              </button>
+            ))}
           </div>
-        )}
 
-        {}
-        <form onSubmit={manejarInicioSesion} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo Electrónico
-            </label>
-            <input
+          {mensajeError && (
+            <div
+              className="rounded-2xl px-4 py-3 mb-4 text-sm text-center"
+              style={{ background: COLORES.rojoSuave, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}` }}
+            >
+              {mensajeError}
+            </div>
+          )}
+
+          <div className="space-y-4 mb-3">
+            <Campo
+              label="Correo electrónico"
               type="email"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               placeholder="ejemplo@correo.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-              required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <input
+            <Campo
+              label="Contraseña"
               type="password"
               value={contrasena}
               onChange={(e) => setContrasena(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-              required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={cargando}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 disabled:opacity-50"
-          >
-            {cargando ? "Iniciando sesión..." : "Ingresar"}
-          </button>
-        </form>
+          <div className="text-right mb-6">
+            <button type="button" className="text-xs font-semibold" style={{ color: COLORES.azul }}>
+              ¿Olvidé mi contraseña?
+            </button>
+          </div>
 
+          <button
+            type="button"
+            onClick={manejarLogin}
+            disabled={cargando}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white shadow-md transition-opacity"
+            style={{ background: COLORES.coral, opacity: cargando ? 0.5 : 1 }}
+          >
+            {cargando ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </button>
+        </div>
+
+        <div className="w-full max-w-sm rounded-3xl p-6 flex gap-4 items-start" style={{ background: COLORES.verde }}>
+          <ShieldCheck size={30} className="text-white shrink-0 mt-1" />
+          <div>
+            <p className="font-display font-bold text-white mb-1">Tu información, nuestra prioridad.</p>
+            <p className="text-xs leading-relaxed" style={{ color: "#E4F8F1" }}>
+              Seguridad y confidencialidad garantizada en cada paso de tu tratamiento
+              neuropsicológico. Cumplimos con los más altos estándares de protección de datos médicos.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
