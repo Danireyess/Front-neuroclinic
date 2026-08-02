@@ -14,15 +14,22 @@ export default function Login({ onIngresar, onVolverAlInicio }) {
 
   const manejarLogin = async () => {
     setMensajeError("");
+    
     if (!correo.trim() || !contrasena.trim()) {
       setMensajeError("Por favor completa todos los campos.");
       return;
     }
+    
     setCargando(true);
+    
     try {
       const datos = await iniciarSesion(rolSeleccionado, correo, contrasena);
       Cookies.set("token", datos.token, { expires: 1 });
-      onIngresar(rolSeleccionado);
+      Cookies.set("rol", rolSeleccionado, { expires: 1 });
+      const usuario = datos.doctor || datos.patient;
+      Cookies.set("usuario", JSON.stringify(usuario), { expires: 1 });
+      onIngresar(rolSeleccionado, usuario); 
+    
     } catch (err) {
       setMensajeError("Correo o contraseña incorrectos");
     } finally {

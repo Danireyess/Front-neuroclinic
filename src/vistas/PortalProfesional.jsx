@@ -494,7 +494,7 @@ export default function PortalProfesional({
           <>
             <div className="mb-8">
               <h1 className="font-display text-3xl font-bold" style={{ color: COLORES.navy }}>
-                Hola, {usuario.nombre}
+                <h1>Hola, {usuario.name} {usuario.lastName}</h1>
               </h1>
               <p className="text-sm mt-1" style={{ color: COLORES.azul }}>
                 Aquí está tu resumen clínico de hoy.

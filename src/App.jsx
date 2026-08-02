@@ -1,8 +1,5 @@
-import { useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { useAuth } from "./contextos/AuthContext";
-
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import { COLORES, DISPONIBILIDAD_DEFAULT, ESTADO_CANCELADA } from "./constantes";
 import Home from "./vistas/Home";
 import Login from "./vistas/Login";
@@ -11,13 +8,33 @@ import PortalPaciente from "./vistas/PortalPaciente";
 import PortalProfesional from "./vistas/PortalProfesional";
 
 export default function App() {
-  const navigate = useNavigate(); 
-  const { login, logout } = useAuth();
-
   const [profesionales, setProfesionales] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [citas, setCitas] = useState([]);
-  const [sesion, setSesion] = useState(null); 
+  const [sesion, setSesion] = useState(null);
+  const [mostrandoLogin, setMostrandoLogin] = useState(false);
+
+  useEffect(() => {
+  const tokenGuardado = Cookies.get("token");
+  const rolGuardado = Cookies.get("rol");
+  const usuarioGuardado = Cookies.get("usuario");
+  if (tokenGuardado && rolGuardado && usuarioGuardado) {
+    const usuario = JSON.parse(usuarioGuardado);
+    if (rolGuardado === "paciente") {
+      setPacientes([usuario]);
+    } else {
+      setProfesionales([usuario]);
+    }
+    setSesion({ token: tokenGuardado, rol: rolGuardado, id: usuario.id });
+  }
+}, []);
+
+  const manejarCerrarSesion = () => {
+    Cookies.remove("token");
+    Cookies.remove("rol");
+    setSesion(null);
+    setMostrandoLogin(false);
+  };
 
   const agregarPaciente = (datosPaciente) => {
     const nuevoPaciente = { ...datosPaciente, id: Date.now() };
@@ -76,97 +93,61 @@ export default function App() {
 
   return (
     <div className="nc-root min-h-screen flex flex-col" style={{ background: COLORES.fondo }}>
-      <Routes>
-        
-        {}
-        <Route path="/" element={<Home onIrALogin={() => navigate('/login')} />} />
-        
-        <Route 
-          path="/login" 
-          element={
-            <Login
-              onIngresar={(rolElegido, tokenFalso = "token123") => {
-                setSesion({ rol: rolElegido, id: null });
-                login(tokenFalso);
-                navigate('/seleccion-perfil');
-              }}
-              onVolverAlInicio={() => navigate('/')}
-            />
-          } 
+      {sesion === null && !mostrandoLogin ? (
+        <Home onIrALogin={() => setMostrandoLogin(true)} />
+      ) : sesion === null ? (
+      
+      <Login
+      onIngresar={(rolElegido, usuario) => {
+        if (rolElegido === "paciente") {
+          setPacientes([usuario]);
+        } else {
+          setProfesionales([usuario]);
+        }
+        setSesion({ rol: rolElegido, id: usuario.id });
+        setMostrandoLogin(false);
+      }}
+      onVolverAlInicio={() => setMostrandoLogin(false)}
+      
+      />
+      ) : usuarioActual == null ? (
+        <SeleccionPerfil
+          rol={sesion.rol}
+          perfiles={sesion.rol === "paciente" ? pacientes : profesionales}
+          onSeleccionar={(perfilId) => setSesion({ ...sesion, id: perfilId })}
+          onCrear={(datosPerfil) => {
+            const nuevoPerfil =
+              sesion.rol === "paciente" ? agregarPaciente(datosPerfil) : agregarProfesional(datosPerfil);
+            setSesion({ ...sesion, id: nuevoPerfil.id });
+          }}
+          onVolver={manejarCerrarSesion}
         />
-
-        {}
-        <Route element={<ProtectedRoute />}>
-          
-          <Route 
-            path="/seleccion-perfil" 
-            element={
-              <SeleccionPerfil
-                rol={sesion?.rol}
-                perfiles={sesion?.rol === "paciente" ? pacientes : profesionales}
-                onSeleccionar={(perfilId) => {
-                  setSesion({ ...sesion, id: perfilId });
-                  navigate(sesion?.rol === "paciente" ? '/portal-paciente' : '/portal-profesional');
-                }}
-                onCrear={(datosPerfil) => {
-                  const nuevoPerfil = sesion?.rol === "paciente" ? agregarPaciente(datosPerfil) : agregarProfesional(datosPerfil);
-                  setSesion({ ...sesion, id: nuevoPerfil.id });
-                  navigate(sesion?.rol === "paciente" ? '/portal-paciente' : '/portal-profesional');
-                }}
-                onVolver={() => {
-                  setSesion(null);
-                  logout(); 
-                  navigate('/login');
-                }}
-              />
-            } 
-          />
-
-          <Route 
-            path="/portal-paciente" 
-            element={
-              <div className="flex-1 flex" style={{ height: "100vh" }}>
-                <PortalPaciente
-                  usuario={usuarioActual}
-                  profesionales={profesionales}
-                  citas={citas}
-                  agregarCita={agregarCita}
-                  cancelarCita={cancelarCita}
-                  actualizarPaciente={actualizarPaciente}
-                  onCerrarSesion={() => {
-                    setSesion(null);
-                    logout(); 
-                    navigate('/login');
-                  }}
-                />
-              </div>
-            } 
-          />
-
-          <Route 
-            path="/portal-profesional" 
-            element={
-              <div className="flex-1 flex" style={{ height: "100vh" }}>
-                <PortalProfesional
-                  usuario={usuarioActual}
-                  pacientes={pacientes}
-                  agregarPaciente={agregarPaciente}
-                  actualizarProfesional={actualizarProfesional}
-                  citas={citas}
-                  agregarCita={agregarCita}
-                  actualizarEstado={actualizarEstado}
-                  onCerrarSesion={() => {
-                    setSesion(null);
-                    logout(); 
-                    navigate('/login');
-                  }}
-                />
-              </div>
-            } 
-          />
-        </Route>
-
-      </Routes>
+      ) : (
+        <div className="flex-1 flex" style={{ height: "100vh" }}>
+          {sesion.rol === "paciente" ? (
+            <PortalPaciente
+              usuario={usuarioActual}
+              profesionales={profesionales}
+              citas={citas}
+              agregarCita={agregarCita}
+              cancelarCita={cancelarCita}
+              actualizarPaciente={actualizarPaciente}
+              onCerrarSesion={manejarCerrarSesion}
+            />
+          ) : (
+            <PortalProfesional
+              usuario={usuarioActual}
+              pacientes={pacientes}
+              agregarPaciente={agregarPaciente}
+              actualizarProfesional={actualizarProfesional}
+              citas={citas}
+              agregarCita={agregarCita}
+              actualizarEstado={actualizarEstado}
+              onCerrarSesion={manejarCerrarSesion}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
